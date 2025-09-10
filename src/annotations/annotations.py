@@ -120,6 +120,10 @@ class Annotation:
         return hash((self.term, self.modifiers))
 
 
+def _annotation_factory(a_str: str, *args):
+    return Annotation(a_str)
+
+
 class AnnotationCollection(Set):
     """Object that parses and processes localisation (or other) annotation
     strings of the form ".
@@ -130,8 +134,9 @@ class AnnotationCollection(Set):
         self,
         annotations_string: str,
         annotation_factory: Callable[[str], Annotation] = (
-            lambda a_str: Annotation(a_str)
+            _annotation_factory
         ),
+        annotation_factory_extra_args: tuple = (),
     ):
         """Creates a new `AnnotationCollection` from the given annotation
         string.
@@ -147,13 +152,14 @@ class AnnotationCollection(Set):
         """
         if annotations_string != "":
             self._annotations = frozenset([
-                annotation_factory(a_str)
+                annotation_factory(a_str, *annotation_factory_extra_args)
                 for a_str in ANNOT_SPLIT_RE.split(annotations_string)
             ])
         else:
             self._annotations = frozenset([])
 
         self._annotation_factory = annotation_factory
+        self._annotation_factory_extra_args = annotation_factory_extra_args
 
     def __contains__(self, item: str | Annotation):
         """Returns whether the annotation collection contains the given
@@ -165,7 +171,8 @@ class AnnotationCollection(Set):
                 converted to an `Annotation` object.
         """
         if isinstance(item, str):
-            annot = self._annotation_factory(item)
+            annot = self._annotation_factory(
+                item, *self._annotation_factory_extra_args)
         else:
             annot = item
         term_re = re.compile(annot.term)

@@ -108,6 +108,10 @@ class OntologyAnnotation(Annotation):
         return self.ontology_entry.match_term(term, recursive=recursive)
 
 
+def _ontology_annotation_factory(a_str: str, ontology: Ontology):
+    return OntologyAnnotation(a_str, ontology)
+
+
 class OntologyAnnotationCollection(AnnotationCollection):
     """Annotation collection that is connected to an annotation ontology.
     """
@@ -122,7 +126,8 @@ class OntologyAnnotationCollection(AnnotationCollection):
         self.ontology = ontology
         super().__init__(
             annotations_string,
-            lambda a_str: OntologyAnnotation(a_str, ontology)
+            _ontology_annotation_factory,
+            (ontology,),
         )
 
     def __and__(self, other: OntologyAnnotationCollection):
